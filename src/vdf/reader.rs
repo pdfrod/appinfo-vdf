@@ -4,6 +4,8 @@ use std::convert::TryInto;
 use super::{VDF, VDFAppNode, VDFAppNodeKind, VDFAppSection, VDFHeader};
 
 const MAGIC: u32 = 0x07564427;
+//switch to 0x07564428
+const MAGIC2: u32 = 0x07564428;
 
 pub struct ParseError<'a>(&'a str);
 
@@ -29,7 +31,7 @@ pub fn read(input: &[u8]) -> ParseResult<VDF> {
 }
 
 fn parse_vdf_header(input: &[u8]) -> ParseResult<VDFHeader> {
-    let (input, magic) = parse_magic(input, MAGIC)?;
+    let (input, magic) = parse_magic(input, MAGIC,MAGIC2)?;
     let (input, version) = parse_u32le(input)?;
     Ok((input, VDFHeader { magic: magic, version: version }))
 }
@@ -38,6 +40,8 @@ fn parse_vdf_header(input: &[u8]) -> ParseResult<VDFHeader> {
 fn parse_vdf_app_sections(input: &[u8]) -> ParseResult<Vec<VDFAppSection>> {
     let mut sections = Vec::new();
     let mut input2 = input;
+    //why couldn't parse vdf app section when magic is 0x07564428?
+    //println!("input2: {:?}" , input2 );
     let mut result = Err(ParseError("Couldn't parse VDF app section"));
 
     loop {
@@ -65,6 +69,7 @@ fn parse_vdf_app_section(input: &[u8]) -> ParseResult<VDFAppSection> {
     let (data, last_updated) = parse_u32le(data)?;
     let (data, pics_token) = parse_u64le(data)?;
     let (data, sha1) = parse_take_n(data, 20)?;
+    let (data, binary_sha1) = parse_take_n(data, 20)?;
     let (data, change_number) = parse_u32le(data)?;
     let (_data, nodes) = parse_vdf_app_nodes(data)?;
     Ok((input, VDFAppSection {
@@ -74,6 +79,7 @@ fn parse_vdf_app_section(input: &[u8]) -> ParseResult<VDFAppSection> {
         last_updated: last_updated,
         pics_token: pics_token,
         sha1: sha1.try_into().unwrap(),
+        binary_sha1: binary_sha1.try_into().unwrap(),
         change_number: change_number,
         nodes: nodes
     }))
@@ -145,9 +151,10 @@ fn parse_vdf_str(input: &[u8]) -> ParseResult<CString> {
     Ok((&input[1..], string))
 }
 
-fn parse_magic(input: &[u8], magic: u32) -> ParseResult<u32> {
+fn parse_magic(input: &[u8], magic: u32 ,  magic2 :u32) -> ParseResult<u32> {
     let (input, value) = parse_u32le(input)?;
-    if value == magic {
+    if value == magic || value == magic2 {
+        println!("magic: {} at parse_magic", value);
         Ok((input, value))
     } else {
         Err(ParseError("Invalid magic number"))

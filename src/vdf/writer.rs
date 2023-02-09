@@ -34,6 +34,7 @@ where S: Write {
     data.write(&section.last_updated.to_le_bytes())?;
     data.write(&section.pics_token.to_le_bytes())?;
     data.write(&section.sha1)?; //FIXME: sha1 needs to be recomputed
+    data.write(&section.binary_sha1)?; //FIXME: binary_sha1 needs to be recomputed
     data.write(&section.change_number.to_le_bytes())?;
     write_vdf_app_nodes(&mut data, &section.nodes)?;
     let data_size = data.len() as u32;
