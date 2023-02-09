@@ -19,6 +19,7 @@ fn print_app_section(section: &VDFAppSection) {
     println!("last_updated: {}", section.last_updated);
     println!("pics_token: {}", section.pics_token);
     println!("sha1: {:?}", section.sha1);
+    println!("binary_sha1: {:?}", section.binary_sha1);
     println!("change_number: {}", section.change_number);
     print_app_nodes(&section.nodes, 0);
 }

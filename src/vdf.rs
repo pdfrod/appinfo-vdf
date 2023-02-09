@@ -25,6 +25,7 @@ struct VDFAppSection {
     last_updated: u32,
     pics_token: u64,
     sha1: [u8; 20],
+    binary_sha1: [u8; 20],
     change_number: u32,
     nodes: Vec<VDFAppNode>,
 }
