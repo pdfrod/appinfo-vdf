@@ -4,6 +4,7 @@ use std::convert::TryInto;
 use super::{VDF, VDFAppNode, VDFAppNodeKind, VDFAppSection, VDFHeader};
 
 const MAGIC: u32 = 0x07564427;
+const MAGIC_2023: u32 = 0x07564428;
 
 pub struct ParseError<'a>(&'a str);
 
@@ -29,7 +30,7 @@ pub fn read(input: &[u8]) -> ParseResult<VDF> {
 }
 
 fn parse_vdf_header(input: &[u8]) -> ParseResult<VDFHeader> {
-    let (input, magic) = parse_magic(input, MAGIC)?;
+    let (input, magic) = parse_magic(input, MAGIC).unwrap_or(parse_magic(input, MAGIC_2023)?);
     let (input, version) = parse_u32le(input)?;
     Ok((input, VDFHeader { magic: magic, version: version }))
 }
@@ -66,6 +67,7 @@ fn parse_vdf_app_section(input: &[u8]) -> ParseResult<VDFAppSection> {
     let (data, pics_token) = parse_u64le(data)?;
     let (data, sha1) = parse_take_n(data, 20)?;
     let (data, change_number) = parse_u32le(data)?;
+    let (data, binary_hash) = parse_take_n(data, 20)?;
     let (_data, nodes) = parse_vdf_app_nodes(data)?;
     Ok((input, VDFAppSection {
         app_id: app_id,
@@ -75,6 +77,7 @@ fn parse_vdf_app_section(input: &[u8]) -> ParseResult<VDFAppSection> {
         pics_token: pics_token,
         sha1: sha1.try_into().unwrap(),
         change_number: change_number,
+        binary_hash: binary_hash.try_into().unwrap(),
         nodes: nodes
     }))
 }
